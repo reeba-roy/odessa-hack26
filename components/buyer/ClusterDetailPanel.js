@@ -61,9 +61,12 @@ export default function ClusterDetailPanel({
             return (
               <li key={listing.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                 <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-slate-700">
-                  <span>
-                    {listing.farmerName} · {listing.cropType}
-                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-slate-800">{listing.farmerName}</div>
+                    <div className="mt-0.5 text-xs text-slate-500">
+                      {listing.wasteCategory || listing.cropType || "Waste"} · {listing.quantityTonnes} t
+                    </div>
+                  </div>
                   <input
                     type="checkbox"
                     checked={checked}

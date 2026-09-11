@@ -11,7 +11,7 @@ export default function ListingCard({ listing }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">
-            {listing.cropType}
+            {listing.wasteCategory || listing.cropType || "Waste"}
           </p>
           <h3 className="mt-2 text-xl font-bold text-slate-900">{listing.farmerName}</h3>
         </div>

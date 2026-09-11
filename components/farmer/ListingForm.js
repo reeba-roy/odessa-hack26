@@ -1,28 +1,77 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
+import "leaflet/dist/leaflet.css";
 import { addListing } from "@/lib/firestore";
+import { resolveWasteCategory } from "@/lib/wasteCategory";
 
-const cropOptions = [
+const IndiaMapPicker = dynamic(
+  async () => {
+    const { MapContainer, Marker, TileLayer, useMapEvents } = await import("react-leaflet");
+
+function MapLocationPicker({ onPick, defaultCenter, currentLocation }) {
+      const [location, setLocation] = useState(currentLocation || defaultCenter);
+
+      function MapClickHandler() {
+        useMapEvents({
+          click(event) {
+            const nextLocation = [event.latlng.lat, event.latlng.lng];
+            setLocation(nextLocation);
+            onPick({ lat: nextLocation[0], lng: nextLocation[1] });
+          },
+        });
+
+        return null;
+      }
+
+      return (
+        <div className="mt-3 overflow-hidden rounded-2xl border border-slate-700">
+          <MapContainer center={location} zoom={5} scrollWheelZoom className="h-64 w-full">
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <MapClickHandler />
+            <Marker position={location} />
+          </MapContainer>
+        </div>
+      );
+    }
+
+    return MapLocationPicker;
+  },
+  { ssr: false }
+);
+
+const wasteOptions = [
   "Paddy Stubble",
   "Coconut Husk",
   "Sugarcane Bagasse",
   "Banana Stem",
+  "Other",
 ];
+
+const defaultLatLng = {
+  lat: 9.5916,
+  lng: 76.5222,
+};
 
 const initialForm = {
   farmerName: "",
-  cropType: cropOptions[0],
+  wasteCategory: wasteOptions[0],
+  customWasteCategory: "",
   quantityTonnes: "",
   moisturePct: "",
-  lat: "",
-  lng: "",
+  lat: String(defaultLatLng.lat),
+  lng: String(defaultLatLng.lng),
 };
 
 export default function ListingForm() {
   const [form, setForm] = useState(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [showMapPicker, setShowMapPicker] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -32,7 +81,7 @@ export default function ListingForm() {
     }));
   };
 
-  const handleUseLocation = () => {
+  const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
       setMessage("Geolocation is not supported in this browser.");
       return;
@@ -45,12 +94,25 @@ export default function ListingForm() {
           lat: String(position.coords.latitude),
           lng: String(position.coords.longitude),
         }));
-        setMessage("Location captured successfully.");
+        setShowMapPicker(false);
+        setMessage("Current location captured successfully.");
       },
-      () => {
-        setMessage("Unable to read your location. Please type coordinates manually.");
-      }
+      (error) => {
+        console.error("Geolocation errored:", error);
+        setMessage("Unable to read your current location. Please allow location access in the browser or place a pin on the India map instead.");
+      },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
     );
+  };
+
+  const handleLocationPick = (coordinates) => {
+    setForm((current) => ({
+      ...current,
+      lat: String(coordinates.lat),
+      lng: String(coordinates.lng),
+    }));
+    setShowMapPicker(true);
+    setMessage("Location pinned on the India map. You can click again to adjust it.");
   };
 
   const handleSubmit = async (event) => {
@@ -58,14 +120,19 @@ export default function ListingForm() {
     setIsSubmitting(true);
     setMessage("");
 
+    const wasteCategory = resolveWasteCategory({
+      wasteCategory: form.wasteCategory,
+      customWasteCategory: form.customWasteCategory,
+    });
+
     try {
       await addListing({
         farmerName: form.farmerName || "Demo Farmer",
-        cropType: form.cropType,
+        wasteCategory,
         quantityTonnes: Number(form.quantityTonnes),
         moisturePct: Number(form.moisturePct),
-        lat: Number(form.lat || 9.5916),
-        lng: Number(form.lng || 76.5222),
+        lat: Number(form.lat || defaultLatLng.lat),
+        lng: Number(form.lng || defaultLatLng.lng),
         photoUrl:
           "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=800&q=80",
       });
@@ -84,7 +151,7 @@ export default function ListingForm() {
     <aside className="rounded-3xl border border-slate-200 bg-slate-900 p-5 text-white shadow-sm sm:p-6">
       <div className="mb-5">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">Add listing</p>
-        <h2 className="mt-2 text-2xl font-bold">Create a new crop residue offer</h2>
+        <h2 className="mt-2 text-2xl font-bold">Create a new agri-waste offer</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -103,23 +170,39 @@ export default function ListingForm() {
         </div>
 
         <div>
-          <label htmlFor="cropType" className="mb-1 block text-sm font-medium text-slate-200">
-            Crop type
+          <label htmlFor="wasteCategory" className="mb-1 block text-sm font-medium text-slate-200">
+            Waste category
           </label>
           <select
-            id="cropType"
-            name="cropType"
-            value={form.cropType}
+            id="wasteCategory"
+            name="wasteCategory"
+            value={form.wasteCategory}
             onChange={handleChange}
             className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2.5 text-white focus:border-emerald-400 focus:outline-none"
           >
-            {cropOptions.map((crop) => (
-              <option key={crop} value={crop}>
-                {crop}
+            {wasteOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
               </option>
             ))}
           </select>
         </div>
+
+        {form.wasteCategory === "Other" ? (
+          <div>
+            <label htmlFor="customWasteCategory" className="mb-1 block text-sm font-medium text-slate-200">
+              Custom waste category
+            </label>
+            <input
+              id="customWasteCategory"
+              name="customWasteCategory"
+              value={form.customWasteCategory}
+              onChange={handleChange}
+              placeholder="e.g. Rice husk, sawdust, palm frond"
+              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2.5 text-white placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none"
+            />
+          </div>
+        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -155,45 +238,71 @@ export default function ListingForm() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="lat" className="mb-1 block text-sm font-medium text-slate-200">
-              Latitude
-            </label>
-            <input
-              id="lat"
-              name="lat"
-              type="number"
-              step="0.0001"
-              value={form.lat}
-              onChange={handleChange}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2.5 text-white focus:border-emerald-400 focus:outline-none"
-            />
+        <div className="rounded-2xl border border-slate-700 bg-slate-800 p-3">
+          <div className="mb-2">
+            <p className="text-sm font-medium text-slate-200">Farm location</p>
           </div>
 
-          <div>
-            <label htmlFor="lng" className="mb-1 block text-sm font-medium text-slate-200">
-              Longitude
-            </label>
-            <input
-              id="lng"
-              name="lng"
-              type="number"
-              step="0.0001"
-              value={form.lng}
-              onChange={handleChange}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2.5 text-white focus:border-emerald-400 focus:outline-none"
-            />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={handleUseCurrentLocation}
+              className="rounded-xl border border-emerald-400 bg-emerald-500/10 px-3 py-2.5 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
+            >
+              Use my location
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowMapPicker((current) => !current)}
+              className="rounded-xl border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-slate-500"
+            >
+              {showMapPicker ? "Hide India map" : "Place pin on India map"}
+            </button>
           </div>
+
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div>
+              <label htmlFor="lat" className="mb-1 block text-xs uppercase tracking-[0.12em] text-slate-400">
+                Latitude
+              </label>
+              <input
+                id="lat"
+                name="lat"
+                type="number"
+                step="0.0001"
+                value={form.lat}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-white focus:border-emerald-400 focus:outline-none"
+                readOnly
+              />
+            </div>
+
+            <div>
+              <label htmlFor="lng" className="mb-1 block text-xs uppercase tracking-[0.12em] text-slate-400">
+                Longitude
+              </label>
+              <input
+                id="lng"
+                name="lng"
+                type="number"
+                step="0.0001"
+                value={form.lng}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-white focus:border-emerald-400 focus:outline-none"
+                readOnly
+              />
+            </div>
+          </div>
+
+          {showMapPicker ? (
+            <IndiaMapPicker
+              onPick={handleLocationPick}
+              defaultCenter={[defaultLatLng.lat, defaultLatLng.lng]}
+              currentLocation={[Number(form.lat || defaultLatLng.lat), Number(form.lng || defaultLatLng.lng)]}
+            />
+          ) : null}
         </div>
-
-        <button
-          type="button"
-          onClick={handleUseLocation}
-          className="w-full rounded-xl border border-emerald-400 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
-        >
-          Use my location
-        </button>
 
         <button
           type="submit"
@@ -212,3 +321,4 @@ export default function ListingForm() {
     </aside>
   );
 }
+
