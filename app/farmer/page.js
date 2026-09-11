@@ -21,49 +21,38 @@ export default function FarmerPage() {
   }, []);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8 rounded-3xl border border-emerald-200 bg-white p-6 shadow-sm sm:p-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">
-          Farmer view
-        </p>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          AgriNode dashboard
-        </h1>
-      </header>
+    <main className="agri-market-shell">
+      <section className="agri-market-head">
+        <span className="agri-section-label">Farmer view</span>
+        <h1>AgriNode dashboard</h1>
+        <p className="agri-market-subhead">Connect regional surplus to buyer demand.</p>
+      </section>
 
-      <div className="grid gap-6 lg:grid-cols-[420px_minmax(0,1fr)]">
+      <section className="agri-dashboard-layout">
         <ListingForm />
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-          <div className="mb-5 flex items-center justify-between gap-3">
+        <section className="agri-listing-panel">
+          <div className="agri-listing-panel-top">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Listings
-              </p>
-              <h2 className="mt-1 text-2xl font-bold text-slate-900">Your active waste offers</h2>
+              <span className="agri-section-label">Listings</span>
+              <h2>Your active waste offers</h2>
             </div>
-            <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700">
-              {listings.length} total
-            </span>
+            <span className="agri-listings-total">{listings.length} total</span>
           </div>
 
           {!isReady ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
-              Loading listings from Firestore...
-            </div>
+            <div className="agri-empty-state">Loading listings from Firestore...</div>
           ) : listings.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
-              No listings yet. Add your first agri-waste offer to begin the demo.
-            </div>
+            <div className="agri-empty-state">No listings yet. Add your first agri-waste offer to begin the demo.</div>
           ) : (
-            <div className="space-y-4">
+            <div className="agri-listing-card-stack">
               {listings.map((listing) => (
                 <ListingCard key={listing.id} listing={listing} />
               ))}
             </div>
           )}
         </section>
-      </div>
+      </section>
     </main>
   );
 }
