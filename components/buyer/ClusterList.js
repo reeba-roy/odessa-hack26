@@ -33,12 +33,21 @@ export default function ClusterList({ clusters, selectedClusterId, onSelectClust
           <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-slate-600">
             <div>
               <p className="font-medium text-slate-400">Tonnes</p>
-              <p className="mt-1 text-base font-bold text-slate-900">{cluster.totalTonnes} t</p>
+              <p className="mt-1 text-base font-bold text-slate-900">{cluster.totalTonnes || 0} t</p>
             </div>
             <div>
-              <p className="font-medium text-slate-400">Listings</p>
-              <p className="mt-1 text-base font-bold text-slate-900">{cluster.listingIds.length}</p>
+              <p className="font-medium text-slate-400">Farmers</p>
+              <p className="mt-1 text-base font-bold text-slate-900">{cluster.farmerCount || cluster.listingIds?.length || 0}</p>
             </div>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
+            <span className="rounded-full bg-slate-100 px-2 py-1">{cluster.avgMoisture || 0}% moisture</span>
+            {(cluster.wasteCategories || []).slice(0, 2).map((item) => (
+              <span key={item} className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">
+                {item}
+              </span>
+            ))}
           </div>
         </button>
       ))}

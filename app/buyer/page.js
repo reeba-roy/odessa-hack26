@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import ClusterDetailPanel from "@/components/buyer/ClusterDetailPanel";
 import ClusterList from "@/components/buyer/ClusterList";
 import EscrowModal from "@/components/buyer/EscrowModal";
+import { summarizeClusterData, sortClustersForDisplay } from "@/lib/buyerCluster";
 import { getClusters, getListings, lockListingSelection, subscribeClusters, subscribeListings } from "@/lib/firestore";
 
 const MapView = dynamic(() => import("@/components/map/MapView"), {
@@ -24,6 +25,8 @@ export default function BuyerPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [mapMode, setMapMode] = useState("clusters");
+  const [activeWasteFilter, setActiveWasteFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("quantity");
 
   useEffect(() => {
     let unsubscribeListings = () => {};
@@ -60,9 +63,38 @@ export default function BuyerPage() {
     };
   }, []);
 
+  const clusterOptions = useMemo(() => {
+    const pool = clusters.map((cluster) => {
+      const summary = summarizeClusterData(cluster, listings);
+      return {
+        ...cluster,
+        ...summary,
+      };
+    });
+
+    const filtered = activeWasteFilter === "all"
+      ? pool
+      : pool.filter((cluster) => {
+          const matched = listings.filter((listing) => (cluster.listingIds || []).includes(listing.id));
+          return matched.some((listing) => (listing.wasteCategory || listing.cropType || "Other") === activeWasteFilter);
+        });
+
+    return sortClustersForDisplay(filtered, sortBy, listings);
+  }, [clusters, listings, activeWasteFilter, sortBy]);
+
   const selectedClusterList = useMemo(() => {
-    return clusters.find((cluster) => cluster.id === selectedCluster?.id) ?? clusters[0] ?? null;
-  }, [clusters, selectedCluster]);
+    const selectedFromOptions = clusterOptions.find((cluster) => cluster.id === selectedCluster?.id);
+    if (selectedFromOptions) {
+      return selectedFromOptions;
+    }
+
+    const selectedFromClusters = clusters.find((cluster) => cluster.id === selectedCluster?.id);
+    if (selectedFromClusters) {
+      return selectedFromClusters;
+    }
+
+    return clusterOptions[0] ?? clusters[0] ?? null;
+  }, [clusterOptions, clusters, selectedCluster]);
 
   useEffect(() => {
     if (!selectedClusterList) {
@@ -158,8 +190,41 @@ export default function BuyerPage() {
             <h2 className="mt-2 text-2xl font-bold text-slate-900">Available lots</h2>
           </div>
 
+          <div className="mb-4 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: "all", label: "All waste" },
+                { value: "Paddy Stubble", label: "Paddy" },
+                { value: "Sugarcane Bagasse", label: "Bagasse" },
+                { value: "Banana Stem", label: "Banana" },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setActiveWasteFilter(option.value)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${activeWasteFilter === option.value ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+              Sort by
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none"
+              >
+                <option value="quantity">Quantity</option>
+                <option value="urgency">Urgency</option>
+                <option value="distance">Distance</option>
+              </select>
+            </label>
+          </div>
+
           <ClusterList
-            clusters={clusters}
+            clusters={clusterOptions}
             selectedClusterId={selectedClusterList?.id ?? null}
             onSelectCluster={setSelectedCluster}
           />
@@ -185,8 +250,26 @@ export default function BuyerPage() {
             </div>
           </div>
 
+          <div className="mb-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+            {selectedClusterList ? (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Cluster summary</p>
+                  <h3 className="mt-1 text-lg font-bold text-slate-900">{selectedClusterList.region}</h3>
+                </div>
+                <div className="flex flex-wrap gap-2 text-sm text-slate-700">
+                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-emerald-200">{selectedClusterList.totalTonnes || 0} t total</span>
+                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-emerald-200">{selectedClusterList.farmerCount || 0} farmers</span>
+                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-emerald-200">{selectedClusterList.avgMoisture || 0}% avg moisture</span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">Select a cluster to view the live summary.</p>
+            )}
+          </div>
+
           <MapView
-            clusters={clusters}
+            clusters={clusterOptions}
             listings={listings}
             selectedCluster={selectedClusterList}
             onSelectCluster={setSelectedCluster}

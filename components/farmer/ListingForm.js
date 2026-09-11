@@ -73,6 +73,35 @@ export default function ListingForm() {
   const [message, setMessage] = useState("");
   const [showMapPicker, setShowMapPicker] = useState(false);
 
+  const validateForm = () => {
+    const wasteCategory = resolveWasteCategory({
+      wasteCategory: form.wasteCategory,
+      customWasteCategory: form.customWasteCategory,
+    });
+
+    if (!form.farmerName.trim()) {
+      return "Farmer name is required.";
+    }
+
+    if (!wasteCategory || wasteCategory === "Other") {
+      return "Please select or add a valid waste category.";
+    }
+
+    if (!form.quantityTonnes || Number(form.quantityTonnes) <= 0) {
+      return "Quantity must be greater than zero.";
+    }
+
+    if (Number(form.moisturePct) < 0 || Number(form.moisturePct) > 100) {
+      return "Moisture percentage must be between 0 and 100.";
+    }
+
+    if (!form.lat || !form.lng) {
+      return "Please choose a farm location using the map or your current location.";
+    }
+
+    return "";
+  };
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((current) => ({
@@ -120,6 +149,13 @@ export default function ListingForm() {
     setIsSubmitting(true);
     setMessage("");
 
+    const validationMessage = validateForm();
+    if (validationMessage) {
+      setMessage(validationMessage);
+      setIsSubmitting(false);
+      return;
+    }
+
     const wasteCategory = resolveWasteCategory({
       wasteCategory: form.wasteCategory,
       customWasteCategory: form.customWasteCategory,
@@ -127,7 +163,7 @@ export default function ListingForm() {
 
     try {
       await addListing({
-        farmerName: form.farmerName || "Demo Farmer",
+        farmerName: form.farmerName.trim(),
         wasteCategory,
         quantityTonnes: Number(form.quantityTonnes),
         moisturePct: Number(form.moisturePct),
@@ -138,10 +174,10 @@ export default function ListingForm() {
       });
 
       setForm(initialForm);
-      setMessage("Listing added to Firestore successfully.");
+      setMessage("Your waste listing is live. It is now visible to buyers in your cluster.");
     } catch (error) {
       console.error(error);
-      setMessage("There was an issue saving the listing.");
+      setMessage("There was an issue saving the listing. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -304,6 +340,15 @@ export default function ListingForm() {
           ) : null}
         </div>
 
+        <div className="rounded-2xl border border-slate-700 bg-slate-800 p-3 text-sm text-slate-200">
+          <p className="font-semibold text-emerald-300">What happens next</p>
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-slate-300">
+            <li>Your listing is published to the cluster feed.</li>
+            <li>Buyers in nearby regions can review your offer.</li>
+            <li>You can accept a selected purchase through the escrow flow.</li>
+          </ol>
+        </div>
+
         <button
           type="submit"
           disabled={isSubmitting}
@@ -313,7 +358,7 @@ export default function ListingForm() {
         </button>
 
         {message ? (
-          <p className="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200">
+          <p className={`rounded-xl border px-3 py-2 text-sm ${message.includes("live") ? "border-emerald-200 bg-emerald-500/10 text-emerald-100" : "border-slate-700 bg-slate-800 text-slate-200"}`}>
             {message}
           </p>
         ) : null}

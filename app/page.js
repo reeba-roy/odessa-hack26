@@ -20,16 +20,23 @@ export default function Home() {
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
           <Link
-            href="/farmer"
+            href="/signup?role=farmer"
             className="flex h-14 items-center justify-center rounded-2xl bg-agri-green px-6 text-base font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
           >
-            Continue as Farmer
+            Sign up as Farmer
           </Link>
           <Link
-            href="/buyer"
+            href="/signup?role=buyer"
             className="flex h-14 items-center justify-center rounded-2xl border border-slate-200 bg-slate-900 px-6 text-base font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
           >
-            Continue as Buyer
+            Sign up as Buyer
+          </Link>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-600">
+          <span>Already have an account?</span>
+          <Link href="/login" className="font-semibold text-emerald-700 hover:text-emerald-800">
+            Log in
           </Link>
         </div>
       </div>

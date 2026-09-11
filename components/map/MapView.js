@@ -26,8 +26,8 @@ export default function MapView({ clusters, listings, selectedCluster, onSelectC
   const center = points.length ? [points[0].lat, points[0].lng] : [10.3, 76.5];
 
   return (
-    <div className="h-[440px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-      <MapContainer center={center} zoom={8} scrollWheelZoom className="h-full w-full">
+    <div className="relative z-0 h-[440px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+      <MapContainer center={center} zoom={8} scrollWheelZoom className="h-full w-full !z-0" style={{ zIndex: 0 }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -63,7 +63,7 @@ export default function MapView({ clusters, listings, selectedCluster, onSelectC
               <Popup>
                 <div className="space-y-1">
                   <strong>{point.farmerName}</strong>
-                  <div>{point.cropType}</div>
+                  <div>{point.cropType || 'Waste'}</div>
                   <div>{point.quantityTonnes} tonnes</div>
                 </div>
               </Popup>
