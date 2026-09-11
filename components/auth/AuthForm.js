@@ -1,25 +1,46 @@
 "use client";
 
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { auth, db, isFirebaseConfigured } from "@/lib/firebase";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const roleOptions = [
   { value: "farmer", label: "Farmer" },
   { value: "buyer", label: "Buyer" },
 ];
 
+function friendlyError(message) {
+  const normalized = String(message || "");
+  if (normalized.includes("already in use") || normalized.includes("EMAIL_EXISTS")) {
+    return "An account already exists for this email.";
+  }
+  if (normalized.includes("password") || normalized.includes("weak")) {
+    return "Use a stronger password with at least 6 characters.";
+  }
+  if (normalized.includes("invalid-email") || normalized.includes("email")) {
+    return "Enter a valid email address.";
+  }
+  if (normalized.includes("wrong-password") || normalized.includes("user-not-found") || normalized.includes("invalid") || normalized.includes("credential")) {
+    return "Incorrect email or password.";
+  }
+  if (normalized.includes("network")) {
+    return "Network error. Please try again.";
+  }
+  return "Authentication failed. Please try again.";
+}
+
 export default function AuthForm({ mode = "login" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultRole = useMemo(() => searchParams.get("role") || "farmer", [searchParams]);
+  const { login, register, isFirebaseConfigured, userProfile } = useAuth();
+
   const [form, setForm] = useState({
     fullName: "",
     email: "",
     password: "",
+    confirmPassword: "",
     role: defaultRole,
   });
   const [error, setError] = useState("");
@@ -37,140 +58,96 @@ export default function AuthForm({ mode = "login" }) {
 
     try {
       if (!isFirebaseConfigured) {
-        throw new Error("Firebase is not configured yet. Add your project credentials in .env.local to enable signup and login.");
+        throw new Error("Firebase is not configured. Add your project credentials in .env.local.");
       }
 
-      const trimmedEmail = form.email.trim();
+      const trimmedEmail = form.email.trim().toLowerCase();
       const trimmedName = form.fullName.trim();
 
       if (!trimmedEmail || !form.password.trim()) {
         throw new Error("Email and password are required.");
       }
 
-      if (mode === "signup" && !trimmedName) {
-        throw new Error("Please enter your full name.");
-      }
-
       if (mode === "signup") {
-        const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, form.password);
-        await setDoc(doc(db, "users", userCredential.user.uid), {
-          fullName: trimmedName,
+        if (!trimmedName) {
+          throw new Error("Please enter your full name.");
+        }
+        if (!form.confirmPassword || form.confirmPassword !== form.password) {
+          throw new Error("Passwords do not match.");
+        }
+
+        await register({
+          name: trimmedName,
           email: trimmedEmail,
+          password: form.password,
           role: form.role,
-          createdAt: Date.now(),
         });
-        localStorage.setItem("agri-role", form.role);
+
         router.push(`/${form.role}`);
         return;
       }
 
-      const userCredential = await signInWithEmailAndPassword(auth, trimmedEmail, form.password);
-      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
-      const savedRole = userDoc?.data()?.role || localStorage.getItem("agri-role") || form.role;
-      localStorage.setItem("agri-role", savedRole);
-      router.push(`/${savedRole}`);
+      const result = await login(trimmedEmail, form.password);
+      const role = result?.profile?.role || userProfile?.role || form.role;
+      router.push(role === "buyer" ? "/buyer" : "/farmer");
     } catch (submitError) {
-      setError(submitError.message || "Authentication failed. Please try again.");
+      setError(friendlyError(submitError?.message || submitError?.toString()));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] sm:p-8">
-      <div className="mb-6 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600">
-          {mode === "signup" ? "Create account" : "Welcome back"}
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900">
-          {mode === "signup" ? "Sign up to AgriNode" : "Login to AgriNode"}
-        </h1>
+    <div className="agri-auth-card">
+      <div className="agri-auth-head">
+        <span className="agri-section-label">{mode === "signup" ? "Create account" : "Welcome back"}</span>
+        <h1>{mode === "signup" ? "Sign up to AgriNode" : "Login to AgriNode"}</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="agri-auth-form">
         {mode === "signup" ? (
-          <div>
-            <label htmlFor="fullName" className="mb-1 block text-sm font-medium text-slate-700">
-              Full name
-            </label>
-            <input
-              id="fullName"
-              name="fullName"
-              value={form.fullName}
-              onChange={handleChange}
-              placeholder="Your name"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 focus:border-emerald-500 focus:outline-none"
-            />
+          <div className="agri-auth-field">
+            <label htmlFor="fullName">Full name</label>
+            <input id="fullName" name="fullName" value={form.fullName} onChange={handleChange} placeholder="Your name" />
           </div>
         ) : null}
 
-        <div>
-          <label htmlFor="role" className="mb-1 block text-sm font-medium text-slate-700">
-            I am a
-          </label>
-          <select
-            id="role"
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 focus:border-emerald-500 focus:outline-none"
-          >
+        <div className="agri-auth-field">
+          <label htmlFor="role">I am a</label>
+          <select id="role" name="role" value={form.role} onChange={handleChange}>
             {roleOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
+              <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
         </div>
 
-        <div>
-          <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="name@example.com"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 focus:border-emerald-500 focus:outline-none"
-          />
+        <div className="agri-auth-field">
+          <label htmlFor="email">Email</label>
+          <input id="email" name="email" type="email" value={form.email} onChange={handleChange} placeholder="name@example.com" />
         </div>
 
-        <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="At least 6 characters"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-900 focus:border-emerald-500 focus:outline-none"
-          />
+        <div className="agri-auth-field">
+          <label htmlFor="password">Password</label>
+          <input id="password" name="password" type="password" value={form.password} onChange={handleChange} placeholder="At least 6 characters" />
         </div>
 
-        {error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+        {mode === "signup" ? (
+          <div className="agri-auth-field">
+            <label htmlFor="confirmPassword">Confirm password</label>
+            <input id="confirmPassword" name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} placeholder="Confirm password" />
+          </div>
         ) : null}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-base font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
-        >
+        {error ? <div className="agri-auth-error">{error}</div> : null}
+
+        <button type="submit" disabled={isSubmitting} className="agri-auth-submit">
           {isSubmitting ? "Please wait..." : mode === "signup" ? "Create account" : "Login"}
         </button>
       </form>
 
-      <p className="mt-5 text-center text-sm text-slate-600">
+      <p className="agri-auth-footer">
         {mode === "signup" ? "Already have an account?" : "Need an account?"}{" "}
-        <Link href={mode === "signup" ? "/login" : "/signup"} className="font-semibold text-emerald-700 hover:text-emerald-800">
-          {mode === "signup" ? "Log in" : "Sign up"}
-        </Link>
+        <Link href={mode === "signup" ? "/login" : "/signup"}>{mode === "signup" ? "Log in" : "Sign up"}</Link>
       </p>
     </div>
   );

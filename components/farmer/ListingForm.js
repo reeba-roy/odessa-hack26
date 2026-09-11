@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import "leaflet/dist/leaflet.css";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { addListing } from "@/lib/firestore";
 import { resolveWasteCategory } from "@/lib/wasteCategory";
 
@@ -68,6 +69,7 @@ const initialForm = {
 };
 
 export default function ListingForm() {
+  const { currentUser } = useAuth();
   const [form, setForm] = useState(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -162,8 +164,14 @@ export default function ListingForm() {
     });
 
     try {
+      if (!currentUser?.uid) {
+        setMessage("Please sign in before creating a listing.");
+        return;
+      }
+
       await addListing({
         farmerName: form.farmerName.trim(),
+        farmerId: currentUser.uid,
         wasteCategory,
         quantityTonnes: Number(form.quantityTonnes),
         moisturePct: Number(form.moisturePct),

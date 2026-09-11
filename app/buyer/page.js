@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import ClusterDetailPanel from "@/components/buyer/ClusterDetailPanel";
 import ClusterList from "@/components/buyer/ClusterList";
 import EscrowModal from "@/components/buyer/EscrowModal";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { summarizeClusterData, sortClustersForDisplay } from "@/lib/buyerCluster";
 import { getClusters, getListings, lockListingSelection, subscribeClusters, subscribeListings } from "@/lib/firestore";
 
@@ -18,6 +20,7 @@ const MapView = dynamic(() => import("@/components/map/MapView"), {
 });
 
 export default function BuyerPage() {
+  const { currentUser } = useAuth();
   const [listings, setListings] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [selectedCluster, setSelectedCluster] = useState(null);
@@ -161,9 +164,15 @@ export default function BuyerPage() {
       return;
     }
 
+    if (!currentUser?.uid) {
+      setStatusMessage("Please sign in before locking an offer.");
+      setIsModalOpen(false);
+      return;
+    }
+
     try {
       setStatusMessage("");
-      await lockListingSelection(cluster.id, chosenListingIds || []);
+      await lockListingSelection(cluster.id, chosenListingIds || [], currentUser.uid);
       setStatusMessage("✓ Demo escrow locked — no real payment processed");
       setIsModalOpen(false);
     } catch (error) {
@@ -174,90 +183,91 @@ export default function BuyerPage() {
   };
 
   return (
-    <main className="agri-buyer-shell">
-      <header className="agri-buyer-header">
-        <span className="agri-section-label light">Buyer view</span>
-        <h1>Regional waste demand</h1>
-        <p>
-          Clustered by similar produce within a ~10 km radius. Map shows cluster points only; farmer details appear after selection.
-        </p>
-      </header>
+    <ProtectedRoute role="buyer" requireAuth={true}>
+      <main className="agri-buyer-shell">
+        <header className="agri-buyer-header">
+          <span className="agri-section-label light">Buyer view</span>
+          <h1>Regional waste demand</h1>
+          <p>
+            Clustered by similar produce within a ~10 km radius. Map shows cluster points only; farmer details appear after selection.
+          </p>
+        </header>
 
-      <section className="agri-buyer-grid">
-        <aside className="agri-buyer-sidebar agri-buyer-cluster-panel">
-          <div className="agri-buyer-panel-title">
-            <span className="agri-section-label">Clusters</span>
-            <h2>Available lots</h2>
-          </div>
+        <section className="agri-buyer-grid">
+          <aside className="agri-buyer-sidebar agri-buyer-cluster-panel">
+            <div className="agri-buyer-panel-title">
+              <span className="agri-section-label">Clusters</span>
+              <h2>Available lots</h2>
+            </div>
 
-          <div className="agri-buyer-filter-block">
-            <div className="agri-buyer-filter-row">
-              {[
-                { value: "all", label: "All waste" },
-                { value: "Paddy Stubble", label: "Paddy" },
-                { value: "Sugarcane Bagasse", label: "Bagasse" },
-                { value: "Banana Stem", label: "Banana" },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setActiveWasteFilter(option.value)}
-                  className={`agri-buyer-filter-button ${activeWasteFilter === option.value ? "selected" : ""}`}
+            <div className="agri-buyer-filter-block">
+              <div className="agri-buyer-filter-row">
+                {[
+                  { value: "all", label: "All waste" },
+                  { value: "Paddy Stubble", label: "Paddy" },
+                  { value: "Sugarcane Bagasse", label: "Bagasse" },
+                  { value: "Banana Stem", label: "Banana" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setActiveWasteFilter(option.value)}
+                    className={`agri-buyer-filter-button ${activeWasteFilter === option.value ? "selected" : ""}`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              <label className="agri-buyer-sort">
+                <span>Sort by</span>
+                <select
+                  value={sortBy}
+                  onChange={(event) => setSortBy(event.target.value)}
+                  className="agri-buyer-sort-select"
                 >
-                  {option.label}
+                  <option value="quantity">Quantity</option>
+                  <option value="urgency">Urgency</option>
+                  <option value="distance">Distance</option>
+                </select>
+              </label>
+            </div>
+
+            <ClusterList
+              clusters={clusterOptions}
+              selectedClusterId={selectedClusterList?.id ?? null}
+              onSelectCluster={setSelectedCluster}
+            />
+          </aside>
+
+          <section className="agri-buyer-map-panel">
+            <div className="agri-buyer-map-toolbar">
+              <div className="agri-buyer-view-switch">
+                <button
+                  type="button"
+                  className={mapMode === "clusters" ? "selected" : ""}
+                  onClick={() => setMapMode("clusters")}
+                >
+                  Cluster view
                 </button>
-              ))}
+                <button
+                  type="button"
+                  className={mapMode === "farmers" ? "selected" : ""}
+                  onClick={() => setMapMode("farmers")}
+                >
+                  Farmer view
+                </button>
+              </div>
             </div>
 
-            <label className="agri-buyer-sort">
-              <span>Sort by</span>
-              <select
-                value={sortBy}
-                onChange={(event) => setSortBy(event.target.value)}
-                className="agri-buyer-sort-select"
-              >
-                <option value="quantity">Quantity</option>
-                <option value="urgency">Urgency</option>
-                <option value="distance">Distance</option>
-              </select>
-            </label>
-          </div>
-
-          <ClusterList
-            clusters={clusterOptions}
-            selectedClusterId={selectedClusterList?.id ?? null}
-            onSelectCluster={setSelectedCluster}
-          />
-        </aside>
-
-        <section className="agri-buyer-map-panel">
-          <div className="agri-buyer-map-toolbar">
-            <div className="agri-buyer-view-switch">
-              <button
-                type="button"
-                className={mapMode === "clusters" ? "selected" : ""}
-                onClick={() => setMapMode("clusters")}
-              >
-                Cluster view
-              </button>
-              <button
-                type="button"
-                className={mapMode === "farmers" ? "selected" : ""}
-                onClick={() => setMapMode("farmers")}
-              >
-                Farmer view
-              </button>
-            </div>
-          </div>
-
-          <div className="agri-buyer-summary">
-            {selectedClusterList ? (
-              <div className="agri-buyer-summary-inner">
-                <div>
-                  <span className="agri-section-label">Cluster summary</span>
-                  <h3>{selectedClusterList.region}</h3>
-                </div>
-                <div className="agri-buyer-summary-stats">
+            <div className="agri-buyer-summary">
+              {selectedClusterList ? (
+                <div className="agri-buyer-summary-inner">
+                  <div>
+                    <span className="agri-section-label">Cluster summary</span>
+                    <h3>{selectedClusterList.region}</h3>
+                  </div>
+                  <div className="agri-buyer-summary-stats">
                   <span>{selectedClusterList.totalTonnes || 0} t total</span>
                   <span>{selectedClusterList.farmerCount || 0} farmers</span>
                   <span>{selectedClusterList.avgMoisture || 0}% avg moisture</span>
@@ -302,14 +312,15 @@ export default function BuyerPage() {
         </aside>
       </section>
 
-      <EscrowModal
-        isOpen={isModalOpen}
-        cluster={selectedClusterList}
-        selectedIds={selectedClusterList ? selectedListingIds[selectedClusterList.id] ?? [] : []}
-        totalFarmers={selectedClusterList ? (selectedClusterList.listingIds || []).length : 0}
-        onClose={() => setIsModalOpen(false)}
-        onConfirm={() => handleLockEscrow(selectedClusterList, selectedClusterList ? selectedListingIds[selectedClusterList.id] ?? [] : [])}
-      />
-    </main>
+        <EscrowModal
+          isOpen={isModalOpen}
+          cluster={selectedClusterList}
+          selectedIds={selectedClusterList ? selectedListingIds[selectedClusterList.id] ?? [] : []}
+          totalFarmers={selectedClusterList ? (selectedClusterList.listingIds || []).length : 0}
+          onClose={() => setIsModalOpen(false)}
+          onConfirm={() => handleLockEscrow(selectedClusterList, selectedClusterList ? selectedListingIds[selectedClusterList.id] ?? [] : [])}
+        />
+      </main>
+    </ProtectedRoute>
   );
 }

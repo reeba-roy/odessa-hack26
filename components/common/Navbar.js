@@ -1,6 +1,24 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function Navbar() {
+  const router = useRouter();
+  const { currentUser, logout, userProfile } = useAuth();
+
+  const roleText = userProfile?.role === "buyer" ? "Buyer" : userProfile?.role === "farmer" ? "Farmer" : "Guest";
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/");
+    } catch (error) {
+      console.warn("Logout failed", error);
+    }
+  };
+
   return (
     <header className="agri-node-navbar">
       <div className="agri-node-navbar-inner">
@@ -24,6 +42,12 @@ export default function Navbar() {
         <div className="agri-user-toggle">
           <Link href="/farmer" className="agri-toggle-link active">Farmer</Link>
           <Link href="/buyer" className="agri-toggle-link">Buyer</Link>
+          <span className="agri-role-label">{roleText}</span>
+          {currentUser ? (
+            <button type="button" className="agri-logout-button" onClick={handleLogout}>Logout</button>
+          ) : (
+            <Link href="/login" className="agri-login-link">Login</Link>
+          )}
         </div>
       </div>
     </header>
