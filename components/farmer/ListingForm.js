@@ -219,7 +219,7 @@ export default function ListingForm() {
   };
 
   return (
-    <aside className="rounded-3xl border border-slate-200 bg-slate-900 p-5 text-white shadow-sm sm:p-6">
+    <aside className="rounded-3xl border border-emerald-900/60 bg-[#0f2f28] p-5 text-white shadow-sm sm:p-6">
       <div className="mb-5">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">{t.addListing}</p>
         <h2 className="mt-2 text-2xl font-bold" style={{ color: "#31543E" }}>{t.createNewOffer}</h2>
@@ -309,7 +309,7 @@ export default function ListingForm() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-700 bg-slate-800 p-3">
+        <div className="rounded-2xl border border-emerald-700/70 bg-[#173d33] p-3">
           <div className="mb-2">
             <p className="text-sm font-medium text-slate-200">{t.farmLocation}</p>
           </div>
@@ -326,7 +326,7 @@ export default function ListingForm() {
             <button
               type="button"
               onClick={() => setShowMapPicker((current) => !current)}
-              className="rounded-xl border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-slate-500"
+              className="rounded-xl border border-emerald-600 bg-[#0d2a24] px-3 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-emerald-500"
             >
               {showMapPicker ? t.hideIndiaMap : t.placePinOnIndiaMap}
             </button>
@@ -375,7 +375,7 @@ export default function ListingForm() {
           ) : null}
         </div>
 
-        <div className="rounded-2xl border border-slate-700 bg-slate-800 p-3 text-sm text-slate-200">
+        <div className="rounded-2xl border border-emerald-700/70 bg-[#173d33] p-3 text-sm text-slate-200">
           <p className="font-semibold text-emerald-300">{t.whatHappensNext}</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-slate-300">
             <li>{t.nextStep1}</li>
@@ -393,7 +393,7 @@ export default function ListingForm() {
         </button>
 
         {message ? (
-          <p className={`rounded-xl border px-3 py-2 text-sm ${message.includes("live") ? "border-emerald-200 bg-emerald-500/10 text-emerald-100" : "border-slate-700 bg-slate-800 text-slate-200"}`}>
+          <p className={`rounded-xl border px-3 py-2 text-sm ${message.includes("live") ? "border-emerald-200 bg-emerald-500/10 text-emerald-100" : "border-emerald-700/70 bg-[#173d33] text-slate-200"}`}>
             {message}
           </p>
         ) : null}
