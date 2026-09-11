@@ -15,7 +15,7 @@ export default function ClusterDetailPanel({
     );
   }
 
-  const clusterListings = listings.filter((listing) => listing.clusterId === cluster.id);
+  const clusterListings = listings.filter((listing) => (cluster.listingIds || []).includes(listing.id));
   const isLocked = cluster.status === "EscrowLocked";
   const isAllSelected = clusterListings.length > 0 && clusterListings.every((listing) => selectedListingIds.includes(listing.id));
 

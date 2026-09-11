@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import ClusterDetailPanel from "@/components/buyer/ClusterDetailPanel";
 import ClusterList from "@/components/buyer/ClusterList";
 import EscrowModal from "@/components/buyer/EscrowModal";
-import { lockListingSelection, subscribeClusters, subscribeListings } from "@/lib/firestore";
+import { getClusters, getListings, lockListingSelection, subscribeClusters, subscribeListings } from "@/lib/firestore";
 
 const MapView = dynamic(() => import("@/components/map/MapView"), {
   ssr: false,
@@ -23,10 +23,30 @@ export default function BuyerPage() {
   const [selectedListingIds, setSelectedListingIds] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [mapMode, setMapMode] = useState("clusters");
 
   useEffect(() => {
-    const unsubscribeListings = subscribeListings((items) => setListings(items));
-    const unsubscribeClusters = subscribeClusters((items) => {
+    let unsubscribeListings = () => {};
+    let unsubscribeClusters = () => {};
+
+    const seed = async () => {
+      try {
+        const [initialListings, initialClusters] = await Promise.all([getListings(), getClusters()]);
+        setListings(initialListings);
+        setClusters(initialClusters);
+        setSelectedCluster((current) => {
+          if (!current) return initialClusters[0] ?? null;
+          return initialClusters.find((cluster) => cluster.id === current.id) ?? initialClusters[0] ?? null;
+        });
+      } catch (error) {
+        console.warn("Initial Firestore fetch failed; buyer page kept demo fallback data.", error);
+      }
+    };
+
+    seed();
+
+    unsubscribeListings = subscribeListings((items) => setListings(items));
+    unsubscribeClusters = subscribeClusters((items) => {
       setClusters(items);
       setSelectedCluster((current) => {
         if (!current) return items[0] ?? null;
@@ -49,8 +69,7 @@ export default function BuyerPage() {
       return;
     }
 
-    const clusterListings = listings.filter((listing) => listing.clusterId === selectedClusterList.id);
-    const clusterListingIds = clusterListings.map((listing) => listing.id);
+    const clusterListingIds = (selectedClusterList.listingIds || []).filter((id) => listings.some((listing) => listing.id === id));
 
     setSelectedListingIds((current) => {
       const existing = current[selectedClusterList.id] ?? [];
@@ -86,9 +105,7 @@ export default function BuyerPage() {
       return;
     }
 
-    const clusterListingIds = listings
-      .filter((listing) => listing.clusterId === selectedClusterList.id)
-      .map((listing) => listing.id);
+    const clusterListingIds = (selectedClusterList.listingIds || []).filter((id) => listings.some((listing) => listing.id === id));
 
     setSelectedListingIds((current) => ({
       ...current,
@@ -149,10 +166,31 @@ export default function BuyerPage() {
         </aside>
 
         <section className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 p-1">
+              <button
+                type="button"
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${mapMode === "clusters" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+                onClick={() => setMapMode("clusters")}
+              >
+                Cluster view
+              </button>
+              <button
+                type="button"
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${mapMode === "farmers" ? "bg-emerald-600 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+                onClick={() => setMapMode("farmers")}
+              >
+                Farmer view
+              </button>
+            </div>
+          </div>
+
           <MapView
             clusters={clusters}
+            listings={listings}
             selectedCluster={selectedClusterList}
             onSelectCluster={setSelectedCluster}
+            mode={mapMode}
           />
         </section>
 
@@ -185,7 +223,7 @@ export default function BuyerPage() {
         isOpen={isModalOpen}
         cluster={selectedClusterList}
         selectedIds={selectedClusterList ? selectedListingIds[selectedClusterList.id] ?? [] : []}
-        totalFarmers={selectedClusterList ? listings.filter((listing) => listing.clusterId === selectedClusterList.id).length : 0}
+        totalFarmers={selectedClusterList ? (selectedClusterList.listingIds || []).length : 0}
         onClose={() => setIsModalOpen(false)}
         onConfirm={() => handleLockEscrow(selectedClusterList, selectedClusterList ? selectedListingIds[selectedClusterList.id] ?? [] : [])}
       />
