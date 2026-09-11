@@ -1,12 +1,37 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import L from "leaflet";
 import { useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLanguage } from "@/components/common/LanguageContext";
 import { addListing } from "@/lib/firestore";
 import { resolveWasteCategory } from "@/lib/wasteCategory";
+
+const redPushpinIcon = L.icon({
+  iconUrl:
+    "data:image/svg+xml;charset=UTF-8," +
+    encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" width="64" height="80">
+        <defs>
+          <linearGradient id="pinGlow" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#ff4d4d"/>
+            <stop offset="100%" stop-color="#d81f2f"/>
+          </linearGradient>
+        </defs>
+        <path d="M32 4C17.6 4 6 15.7 6 30.1c0 18.9 26 42.5 26 42.5s26-23.6 26-42.5C58 15.7 46.4 4 32 4Z" fill="url(#pinGlow)"/>
+        <path d="M32 10c-11.3 0-20.5 9.1-20.5 20.4C11.5 37.5 32 56.6 32 56.6S52.5 37.5 52.5 30.4C52.5 19.1 43.3 10 32 10Z" fill="rgba(255,255,255,0.12)"/>
+        <circle cx="32" cy="30" r="12" fill="#ffcfcc" opacity="0.9"/>
+        <circle cx="32" cy="30" r="8" fill="#f4f7ff" opacity="0.35"/>
+        <circle cx="32" cy="30" r="5.5" fill="#fff" opacity="0.9"/>
+      </svg>
+    `),
+  iconSize: [38, 52],
+  iconAnchor: [19, 49],
+  popupAnchor: [0, -42],
+  shadowUrl: "",
+});
 
 const IndiaMapPicker = dynamic(
   async () => {
@@ -35,7 +60,7 @@ function MapLocationPicker({ onPick, defaultCenter, currentLocation }) {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <MapClickHandler />
-            <Marker position={location} />
+            <Marker position={location} icon={redPushpinIcon} />
           </MapContainer>
         </div>
       );
