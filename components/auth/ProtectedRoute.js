@@ -2,18 +2,20 @@
 
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLanguage } from "@/components/common/LanguageContext";
 
 export default function ProtectedRoute({ children, role, requireAuth = true }) {
   const { currentUser, userProfile, loading } = useAuth();
+  const { t } = useLanguage();
 
   if (loading) {
     return (
       <main className="agri-node-home">
         <section className="agri-home-card">
           <div className="agri-home-content">
-            <div className="agri-kicker">AgriNode</div>
-            <h1 className="agri-home-title">Loading your workspace</h1>
-            <p className="agri-home-copy">Checking your secure marketplace access…</p>
+            <div className="agri-kicker">{t.agriNode}</div>
+            <h1 className="agri-home-title">{t.loadingWorkspace}</h1>
+            <p className="agri-home-copy">{t.loadingWorkspaceCopy}</p>
           </div>
         </section>
       </main>
@@ -25,12 +27,12 @@ export default function ProtectedRoute({ children, role, requireAuth = true }) {
       <main className="agri-node-home">
         <section className="agri-home-card">
           <div className="agri-home-content">
-            <div className="agri-kicker">AgriNode</div>
-            <h1 className="agri-home-title">Please sign in</h1>
-            <p className="agri-home-copy">You need an active account to access this marketplace.</p>
+            <div className="agri-kicker">{t.agriNode}</div>
+            <h1 className="agri-home-title">{t.pleaseSignIn}</h1>
+            <p className="agri-home-copy">{t.pleaseSignInCopy}</p>
             <div className="agri-home-cta">
               <Link className="agri-primary-button" href="/login">
-                Go to login
+                {t.goToLogin}
               </Link>
             </div>
           </div>
@@ -45,12 +47,14 @@ export default function ProtectedRoute({ children, role, requireAuth = true }) {
       <main className="agri-node-home">
         <section className="agri-home-card">
           <div className="agri-home-content">
-            <div className="agri-kicker">AgriNode</div>
-            <h1 className="agri-home-title">Access redirected</h1>
-            <p className="agri-home-copy">This page is reserved for the {role} workspace.</p>
+            <div className="agri-kicker">{t.agriNode}</div>
+            <h1 className="agri-home-title">{t.accessRedirected}</h1>
+            <p className="agri-home-copy">
+              {t.pageReservedFor} {role} {t.workspace}
+            </p>
             <div className="agri-home-cta">
               <Link className="agri-primary-button" href={redirectRoute}>
-                Return to {userProfile.role}
+                {t.returnTo} {userProfile.role}
               </Link>
             </div>
           </div>

@@ -1,3 +1,5 @@
+import { useLanguage } from "@/components/common/LanguageContext";
+
 export default function EscrowModal({
   isOpen,
   cluster,
@@ -6,6 +8,8 @@ export default function EscrowModal({
   onClose,
   onConfirm,
 }) {
+  const { t } = useLanguage();
+
   if (!isOpen || !cluster) {
     return null;
   }
@@ -20,7 +24,7 @@ export default function EscrowModal({
       <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Confirm escrow</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{t.confirmEscrow}</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-900">{cluster.region}</h3>
           </div>
           <button
@@ -35,7 +39,7 @@ export default function EscrowModal({
         <p className="text-base leading-7 text-slate-600">{summaryText}</p>
 
         <div className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm text-amber-800 ring-1 ring-amber-200">
-          Demo escrow only — no real payment will be processed.
+          {t.demoEscrowNote}
         </div>
 
         <div className="mt-6 flex gap-3">
@@ -44,14 +48,14 @@ export default function EscrowModal({
             onClick={onClose}
             className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
           >
-            Cancel
+            {t.cancel}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-base font-semibold text-white hover:bg-emerald-500"
           >
-            {isWholeCluster ? "Confirm whole cluster" : "Confirm selection"}
+            {isWholeCluster ? t.confirmWholeCluster : t.confirmSelection}
           </button>
         </div>
       </div>

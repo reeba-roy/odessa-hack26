@@ -5,12 +5,14 @@ import ListingCard from "@/components/farmer/ListingCard";
 import ListingForm from "@/components/farmer/ListingForm";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLanguage } from "@/components/common/LanguageContext";
 import { subscribeListingsByFarmer } from "@/lib/firestore";
 
 const fallbackListings = [];
 
 export default function FarmerPage() {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const [listings, setListings] = useState(fallbackListings);
   const [isReady, setIsReady] = useState(false);
 
@@ -33,9 +35,9 @@ export default function FarmerPage() {
     <ProtectedRoute role="farmer" requireAuth={true}>
       <main className="agri-market-shell">
         <section className="agri-market-head">
-          <span className="agri-section-label">Farmer view</span>
-          <h1>AgriNode dashboard</h1>
-          <p className="agri-market-subhead">Connect regional surplus to buyer demand.</p>
+          <span className="agri-section-label">{t.farmerView}</span>
+          <h1>{t.agriNodeDashboard}</h1>
+          <p className="agri-market-subhead">{t.marketPitch}</p>
         </section>
 
         <section className="agri-dashboard-layout">
@@ -44,16 +46,18 @@ export default function FarmerPage() {
           <section className="agri-listing-panel">
             <div className="agri-listing-panel-top">
               <div>
-                <span className="agri-section-label">Listings</span>
-                <h2>Your active waste offers</h2>
+                <span className="agri-section-label">{t.listings}</span>
+                <h2>{t.yourActiveWasteOffers}</h2>
               </div>
-              <span className="agri-listings-total">{listings.length} total</span>
+              <span className="agri-listings-total">
+                {listings.length} {t.total}
+              </span>
             </div>
 
             {!isReady ? (
-              <div className="agri-empty-state">Loading listings from Firestore...</div>
+              <div className="agri-empty-state">{t.loadingListings}</div>
             ) : listings.length === 0 ? (
-              <div className="agri-empty-state">No listings yet. Add your first agri-waste offer to begin the demo.</div>
+              <div className="agri-empty-state">{t.noListings}</div>
             ) : (
               <div className="agri-listing-card-stack">
                 {listings.map((listing) => (

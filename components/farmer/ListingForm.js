@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLanguage } from "@/components/common/LanguageContext";
 import { addListing } from "@/lib/firestore";
 import { resolveWasteCategory } from "@/lib/wasteCategory";
 
@@ -70,6 +71,7 @@ const initialForm = {
 
 export default function ListingForm() {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const [form, setForm] = useState(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -194,28 +196,28 @@ export default function ListingForm() {
   return (
     <aside className="rounded-3xl border border-slate-200 bg-slate-900 p-5 text-white shadow-sm sm:p-6">
       <div className="mb-5">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">Add listing</p>
-        <h2 className="mt-2 text-2xl font-bold">Create a new agri-waste offer</h2>
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">{t.addListing}</p>
+        <h2 className="mt-2 text-2xl font-bold">{t.createNewOffer}</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="farmerName" className="mb-1 block text-sm font-medium text-slate-200">
-            Farmer name
+            {t.farmerName}
           </label>
           <input
             id="farmerName"
             name="farmerName"
             value={form.farmerName}
             onChange={handleChange}
-            placeholder="Farmer or co-op name"
+            placeholder={t.farmerNamePlaceholder}
             className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2.5 text-white placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none"
           />
         </div>
 
         <div>
           <label htmlFor="wasteCategory" className="mb-1 block text-sm font-medium text-slate-200">
-            Waste category
+            {t.wasteCategory}
           </label>
           <select
             id="wasteCategory"
@@ -235,14 +237,14 @@ export default function ListingForm() {
         {form.wasteCategory === "Other" ? (
           <div>
             <label htmlFor="customWasteCategory" className="mb-1 block text-sm font-medium text-slate-200">
-              Custom waste category
+              {t.customWasteCategory}
             </label>
             <input
               id="customWasteCategory"
               name="customWasteCategory"
               value={form.customWasteCategory}
               onChange={handleChange}
-              placeholder="e.g. Rice husk, sawdust, palm frond"
+              placeholder={t.customWasteCategoryPlaceholder}
               className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2.5 text-white placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none"
             />
           </div>
@@ -251,7 +253,7 @@ export default function ListingForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="quantityTonnes" className="mb-1 block text-sm font-medium text-slate-200">
-              Quantity (tonnes)
+              {t.quantityTonnes}
             </label>
             <input
               id="quantityTonnes"
@@ -267,7 +269,7 @@ export default function ListingForm() {
 
           <div>
             <label htmlFor="moisturePct" className="mb-1 block text-sm font-medium text-slate-200">
-              Moisture %
+              {t.moisturePercent}
             </label>
             <input
               id="moisturePct"
@@ -284,7 +286,7 @@ export default function ListingForm() {
 
         <div className="rounded-2xl border border-slate-700 bg-slate-800 p-3">
           <div className="mb-2">
-            <p className="text-sm font-medium text-slate-200">Farm location</p>
+            <p className="text-sm font-medium text-slate-200">{t.farmLocation}</p>
           </div>
 
           <div className="grid gap-2 sm:grid-cols-2">
@@ -293,7 +295,7 @@ export default function ListingForm() {
               onClick={handleUseCurrentLocation}
               className="rounded-xl border border-emerald-400 bg-emerald-500/10 px-3 py-2.5 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
             >
-              Use my location
+              {t.useMyLocation}
             </button>
 
             <button
@@ -301,14 +303,14 @@ export default function ListingForm() {
               onClick={() => setShowMapPicker((current) => !current)}
               className="rounded-xl border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-slate-500"
             >
-              {showMapPicker ? "Hide India map" : "Place pin on India map"}
+              {showMapPicker ? t.hideIndiaMap : t.placePinOnIndiaMap}
             </button>
           </div>
 
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <div>
               <label htmlFor="lat" className="mb-1 block text-xs uppercase tracking-[0.12em] text-slate-400">
-                Latitude
+                {t.latitude}
               </label>
               <input
                 id="lat"
@@ -324,7 +326,7 @@ export default function ListingForm() {
 
             <div>
               <label htmlFor="lng" className="mb-1 block text-xs uppercase tracking-[0.12em] text-slate-400">
-                Longitude
+                {t.longitude}
               </label>
               <input
                 id="lng"
@@ -349,11 +351,11 @@ export default function ListingForm() {
         </div>
 
         <div className="rounded-2xl border border-slate-700 bg-slate-800 p-3 text-sm text-slate-200">
-          <p className="font-semibold text-emerald-300">What happens next</p>
+          <p className="font-semibold text-emerald-300">{t.whatHappensNext}</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-slate-300">
-            <li>Your listing is published to the cluster feed.</li>
-            <li>Buyers in nearby regions can review your offer.</li>
-            <li>You can accept a selected purchase through the escrow flow.</li>
+            <li>{t.nextStep1}</li>
+            <li>{t.nextStep2}</li>
+            <li>{t.nextStep3}</li>
           </ol>
         </div>
 
@@ -362,7 +364,7 @@ export default function ListingForm() {
           disabled={isSubmitting}
           className="w-full rounded-xl bg-emerald-500 px-4 py-3 text-base font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSubmitting ? "Saving..." : "Add listing"}
+          {isSubmitting ? t.saving : t.addListingButton}
         </button>
 
         {message ? (

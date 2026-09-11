@@ -1,3 +1,5 @@
+import { useLanguage } from "@/components/common/LanguageContext";
+
 export default function ClusterDetailPanel({
   cluster,
   listings,
@@ -7,10 +9,12 @@ export default function ClusterDetailPanel({
   onClearSelection,
   onLockEscrow,
 }) {
+  const { t } = useLanguage();
+
   if (!cluster) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-slate-500">
-        Select a cluster to view its details.
+        {t.selectClusterDetail}
       </div>
     );
   }
@@ -23,7 +27,7 @@ export default function ClusterDetailPanel({
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Cluster</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{t.clusterLabel}</p>
           <h3 className="mt-1 text-2xl font-bold text-slate-900">{cluster.region}</h3>
         </div>
         <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
@@ -33,24 +37,24 @@ export default function ClusterDetailPanel({
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl bg-slate-50 p-3">
-          <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Total tonnes</p>
+          <p className="text-xs uppercase tracking-[0.12em] text-slate-500">{t.totalTonnesValue}</p>
           <p className="mt-1 text-lg font-bold text-slate-900">{cluster.totalTonnes} t</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-3">
-          <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Farmers</p>
+          <p className="text-xs uppercase tracking-[0.12em] text-slate-500">{t.farmersValue}</p>
           <p className="mt-1 text-lg font-bold text-slate-900">{clusterListings.length}</p>
         </div>
       </div>
 
       <div className="mt-5">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <p className="text-sm font-semibold text-slate-600">Contributing farmers</p>
+          <p className="text-sm font-semibold text-slate-600">{t.contributingFarmers}</p>
           <button
             type="button"
             onClick={isAllSelected ? onClearSelection : onSelectAll}
             className="text-xs font-semibold text-emerald-700 hover:text-emerald-800"
           >
-            {isAllSelected ? "Clear all" : "Select all"}
+            {isAllSelected ? t.clearAll : t.selectAll}
           </button>
         </div>
 
@@ -90,7 +94,7 @@ export default function ClusterDetailPanel({
             : "bg-slate-900 text-white hover:bg-slate-800"
         }`}
       >
-        {isLocked ? "Escrow Locked" : `Lock selected ${selectedListingIds.length} farmer${selectedListingIds.length === 1 ? "" : "s"}`}
+        {isLocked ? t.escrowLocked : `${t.lockSelectedFarmers} ${selectedListingIds.length} ${selectedListingIds.length === 1 ? t.farmerSingular : t.farmerPlural}`}
       </button>
     </div>
   );

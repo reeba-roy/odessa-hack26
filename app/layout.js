@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import Navbar from "@/components/common/Navbar";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { LanguageProvider } from "@/components/common/LanguageContext";
 import "./globals.css";
 
 const inter = Inter({
@@ -18,8 +19,10 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full bg-agri-white text-agri-navy">
         <AuthProvider>
-          <Navbar />
-          {children}
+          <LanguageProvider>
+            <Navbar />
+            {children}
+          </LanguageProvider>
         </AuthProvider>
       </body>
     </html>

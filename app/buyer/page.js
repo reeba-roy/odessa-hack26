@@ -7,6 +7,7 @@ import ClusterList from "@/components/buyer/ClusterList";
 import EscrowModal from "@/components/buyer/EscrowModal";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLanguage } from "@/components/common/LanguageContext";
 import { summarizeClusterData, sortClustersForDisplay } from "@/lib/buyerCluster";
 import { getClusters, getListings, lockListingSelection, subscribeClusters, subscribeListings } from "@/lib/firestore";
 
@@ -21,6 +22,7 @@ const MapView = dynamic(() => import("@/components/map/MapView"), {
 
 export default function BuyerPage() {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const [listings, setListings] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [selectedCluster, setSelectedCluster] = useState(null);
@@ -186,27 +188,25 @@ export default function BuyerPage() {
     <ProtectedRoute role="buyer" requireAuth={true}>
       <main className="agri-buyer-shell">
         <header className="agri-buyer-header">
-          <span className="agri-section-label light">Buyer view</span>
-          <h1>Regional waste demand</h1>
-          <p>
-            Clustered by similar produce within a ~10 km radius. Map shows cluster points only; farmer details appear after selection.
-          </p>
+          <span className="agri-section-label light">{t.buyerView}</span>
+          <h1>{t.regionalWasteDemand}</h1>
+          <p>{t.buyerPitch}</p>
         </header>
 
         <section className="agri-buyer-grid">
           <aside className="agri-buyer-sidebar agri-buyer-cluster-panel">
             <div className="agri-buyer-panel-title">
-              <span className="agri-section-label">Clusters</span>
-              <h2>Available lots</h2>
+              <span className="agri-section-label">{t.clusters}</span>
+              <h2>{t.availableLots}</h2>
             </div>
 
             <div className="agri-buyer-filter-block">
               <div className="agri-buyer-filter-row">
                 {[
-                  { value: "all", label: "All waste" },
-                  { value: "Paddy Stubble", label: "Paddy" },
-                  { value: "Sugarcane Bagasse", label: "Bagasse" },
-                  { value: "Banana Stem", label: "Banana" },
+                  { value: "all", label: t.allWaste },
+                  { value: "Paddy Stubble", label: t.paddy },
+                  { value: "Sugarcane Bagasse", label: t.bagasse },
+                  { value: "Banana Stem", label: t.banana },
                 ].map((option) => (
                   <button
                     key={option.value}
@@ -220,15 +220,15 @@ export default function BuyerPage() {
               </div>
 
               <label className="agri-buyer-sort">
-                <span>Sort by</span>
+                <span>{t.sortBy}</span>
                 <select
                   value={sortBy}
                   onChange={(event) => setSortBy(event.target.value)}
                   className="agri-buyer-sort-select"
                 >
-                  <option value="quantity">Quantity</option>
-                  <option value="urgency">Urgency</option>
-                  <option value="distance">Distance</option>
+                  <option value="quantity">{t.quantity}</option>
+                  <option value="urgency">{t.urgency}</option>
+                  <option value="distance">{t.distance}</option>
                 </select>
               </label>
             </div>
@@ -248,14 +248,14 @@ export default function BuyerPage() {
                   className={mapMode === "clusters" ? "selected" : ""}
                   onClick={() => setMapMode("clusters")}
                 >
-                  Cluster view
+                  {t.clusterView}
                 </button>
                 <button
                   type="button"
                   className={mapMode === "farmers" ? "selected" : ""}
                   onClick={() => setMapMode("farmers")}
                 >
-                  Farmer view
+                  {t.farmerMapView}
                 </button>
               </div>
             </div>
@@ -264,17 +264,17 @@ export default function BuyerPage() {
               {selectedClusterList ? (
                 <div className="agri-buyer-summary-inner">
                   <div>
-                    <span className="agri-section-label">Cluster summary</span>
+                    <span className="agri-section-label">{t.clusterSummary}</span>
                     <h3>{selectedClusterList.region}</h3>
                   </div>
                   <div className="agri-buyer-summary-stats">
-                  <span>{selectedClusterList.totalTonnes || 0} t total</span>
-                  <span>{selectedClusterList.farmerCount || 0} farmers</span>
-                  <span>{selectedClusterList.avgMoisture || 0}% avg moisture</span>
+                  <span>{selectedClusterList.totalTonnes || 0} t {t.total}</span>
+                  <span>{selectedClusterList.farmerCount || 0} {t.farmers}</span>
+                  <span>{selectedClusterList.avgMoisture || 0}% {t.avgMoisture}</span>
                 </div>
               </div>
             ) : (
-              <p>Select a cluster to view the live summary.</p>
+              <p>{t.selectCluster}</p>
             )}
           </div>
 
@@ -297,7 +297,7 @@ export default function BuyerPage() {
             onClearSelection={clearSelection}
             onLockEscrow={(cluster, chosenIds) => {
               if (!chosenIds || chosenIds.length === 0) {
-                setStatusMessage("Choose at least one farmer or select the full cluster.");
+                setStatusMessage(t.chooseFarmer);
                 return;
               }
               setIsModalOpen(true);

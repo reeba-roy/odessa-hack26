@@ -1,3 +1,5 @@
+import { useLanguage } from "@/components/common/LanguageContext";
+
 const STATUS_STYLES = {
   Available: "bg-emerald-100 text-emerald-700 ring-emerald-200",
   EscrowLocked: "bg-amber-100 text-amber-700 ring-amber-200",
@@ -5,6 +7,8 @@ const STATUS_STYLES = {
 };
 
 export default function ClusterList({ clusters, selectedClusterId, onSelectCluster }) {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-3">
       {clusters.map((cluster) => (
@@ -20,7 +24,7 @@ export default function ClusterList({ clusters, selectedClusterId, onSelectClust
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Region</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{t.clusterLabel}</p>
               <h3 className="mt-1 text-lg font-bold text-slate-900">{cluster.region}</h3>
             </div>
             <span
@@ -32,11 +36,11 @@ export default function ClusterList({ clusters, selectedClusterId, onSelectClust
 
           <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-slate-600">
             <div>
-              <p className="font-medium text-slate-400">Tonnes</p>
+              <p className="font-medium text-slate-400">{t.totalTonnesValue}</p>
               <p className="mt-1 text-base font-bold text-slate-900">{cluster.totalTonnes || 0} t</p>
             </div>
             <div>
-              <p className="font-medium text-slate-400">Farmers</p>
+              <p className="font-medium text-slate-400">{t.farmersValue}</p>
               <p className="mt-1 text-base font-bold text-slate-900">{cluster.farmerCount || cluster.listingIds?.length || 0}</p>
             </div>
           </div>
