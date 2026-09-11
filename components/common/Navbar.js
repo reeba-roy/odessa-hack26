@@ -1,14 +1,14 @@
 "use client";
 
+"use client";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function Navbar() {
   const router = useRouter();
-  const { currentUser, logout, userProfile } = useAuth();
-
-  const roleText = userProfile?.role === "buyer" ? "Buyer" : userProfile?.role === "farmer" ? "Farmer" : "Guest";
+  const { currentUser, logout } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -40,9 +40,6 @@ export default function Navbar() {
         </nav>
 
         <div className="agri-user-toggle">
-          <Link href="/farmer" className="agri-toggle-link active">Farmer</Link>
-          <Link href="/buyer" className="agri-toggle-link">Buyer</Link>
-          <span className="agri-role-label">{roleText}</span>
           {currentUser ? (
             <button type="button" className="agri-logout-button" onClick={handleLogout}>Logout</button>
           ) : (

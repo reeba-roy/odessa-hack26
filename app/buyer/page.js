@@ -8,7 +8,7 @@ import EscrowModal from "@/components/buyer/EscrowModal";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { summarizeClusterData, sortClustersForDisplay } from "@/lib/buyerCluster";
-import { getClusters, getListings, lockListingSelection, subscribeClusters, subscribeListings } from "@/lib/firestore";
+import { getClusters, getListings, lockListingSelection, subscribeClusters, subscribeListings, subscribeListingsByBuyer } from "@/lib/firestore";
 
 const MapView = dynamic(() => import("@/components/map/MapView"), {
   ssr: false,
@@ -22,6 +22,7 @@ const MapView = dynamic(() => import("@/components/map/MapView"), {
 export default function BuyerPage() {
   const { currentUser } = useAuth();
   const [listings, setListings] = useState([]);
+  const [lockedListings, setLockedListings] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [selectedCluster, setSelectedCluster] = useState(null);
   const [selectedListingIds, setSelectedListingIds] = useState({});
@@ -30,6 +31,19 @@ export default function BuyerPage() {
   const [mapMode, setMapMode] = useState("clusters");
   const [activeWasteFilter, setActiveWasteFilter] = useState("all");
   const [sortBy, setSortBy] = useState("quantity");
+
+  useEffect(() => {
+    if (!currentUser?.uid) {
+      setLockedListings([]);
+      return () => {};
+    }
+
+    const unsubscribeLocked = subscribeListingsByBuyer(currentUser.uid, (items) => {
+      setLockedListings(items);
+    });
+
+    return () => unsubscribeLocked();
+  }, [currentUser?.uid]);
 
   useEffect(() => {
     let unsubscribeListings = () => {};
@@ -312,7 +326,52 @@ export default function BuyerPage() {
         </aside>
       </section>
 
-        <EscrowModal
+{currentUser?.uid ? (
+        <section className="agri-buyer-locked-panel">
+          <div className="agri-buyer-panel-title">
+            <span className="agri-section-label">Locked buyer purchases</span>
+            <h2>Your escrowed lots</h2>
+          </div>
+
+          {lockedListings.length === 0 ? (
+            <div className="agri-empty-state">No locked lots yet.</div>
+          ) : (
+            <div className="agri-listing-card-stack">
+              {lockedListings.map((listing) => (
+                <article key={listing.id} className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">
+                        {listing.wasteCategory || listing.cropType || "Waste"}
+                      </p>
+                      <h3 className="mt-2 text-xl font-bold text-slate-900">{listing.farmerName}</h3>
+                    </div>
+                    <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
+                      Escrow Locked
+                    </span>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-xl bg-white p-3">
+                      <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Quantity</p>
+                      <p className="mt-1 text-lg font-bold text-slate-900">{listing.quantityTonnes} t</p>
+                    </div>
+                    <div className="rounded-xl bg-white p-3">
+                      <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Status</p>
+                      <p className="mt-1 text-lg font-bold text-slate-900">Locked</p>
+                    </div>
+                    <div className="rounded-xl bg-white p-3">
+                      <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Farmer</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">{listing.farmerName}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      <EscrowModal
           isOpen={isModalOpen}
           cluster={selectedClusterList}
           selectedIds={selectedClusterList ? selectedListingIds[selectedClusterList.id] ?? [] : []}
