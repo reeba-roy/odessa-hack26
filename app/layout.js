@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import Navbar from "@/components/common/Navbar";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { LanguageProvider } from "@/components/common/LanguageContext";
+import { ToastProvider } from "@/components/common/ToastProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,8 +21,10 @@ export default function RootLayout({ children }) {
       <body className="min-h-full bg-agri-white text-agri-navy">
         <AuthProvider>
           <LanguageProvider>
-            <Navbar />
-            {children}
+            <ToastProvider>
+              <Navbar />
+              {children}
+            </ToastProvider>
           </LanguageProvider>
         </AuthProvider>
       </body>

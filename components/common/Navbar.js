@@ -34,7 +34,6 @@ export default function Navbar() {
 
         <nav className="agri-navbar-links">
           <Link href="/farmer" className="agri-navbar-link active">Dashboard</Link>
-          <Link href="/farmer" className="agri-navbar-link">My Listings</Link>
           <Link href="/buyer" className="agri-navbar-link">Messages</Link>
           <Link href="/buyer" className="agri-navbar-link">Impact</Link>
         </nav>

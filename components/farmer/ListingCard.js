@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useToast } from "@/components/common/ToastProvider";
 import { deleteListing } from "@/lib/firestore";
 
 const STATUS_STYLES = {
@@ -21,6 +22,7 @@ function getReadableLocation(lat, lng) {
 }
 
 export default function ListingCard({ listing }) {
+  const { pushToast } = useToast();
   const [locality, setLocality] = useState("Loading locality...");
   const rawStatus = String(listing.status || "listed").toLowerCase();
   const uiStatus = rawStatus === "locked" ? "EscrowLocked" : rawStatus === "available" ? "Listed" : rawStatus;
@@ -87,16 +89,12 @@ export default function ListingCard({ listing }) {
       return;
     }
 
-    const shouldDelete = window.confirm("Remove this listing from the market?");
-    if (!shouldDelete) {
-      return;
-    }
-
     try {
       await deleteListing(listing.id);
+      pushToast("Listing removed", "success");
     } catch (error) {
       console.error("Failed to remove listing", error);
-      window.alert("Unable to remove this listing right now.");
+      pushToast("Could not remove listing", "error");
     }
   };
 

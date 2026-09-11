@@ -8,6 +8,7 @@ import EscrowModal from "@/components/buyer/EscrowModal";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLanguage } from "@/components/common/LanguageContext";
+import { useToast } from "@/components/common/ToastProvider";
 import { summarizeClusterData, sortClustersForDisplay } from "@/lib/buyerCluster";
 import { getClusters, getListings, lockListingSelection, subscribeClusters, subscribeListings, subscribeListingsByBuyer } from "@/lib/firestore";
 
@@ -23,13 +24,13 @@ const MapView = dynamic(() => import("@/components/map/MapView"), {
 export default function BuyerPage() {
   const { currentUser } = useAuth();
   const { t } = useLanguage();
+  const { pushToast } = useToast();
   const [listings, setListings] = useState([]);
   const [lockedListings, setLockedListings] = useState([]);
   const [clusters, setClusters] = useState([]);
   const [selectedCluster, setSelectedCluster] = useState(null);
   const [selectedListingIds, setSelectedListingIds] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
   const [mapMode, setMapMode] = useState("clusters");
   const [activeWasteFilter, setActiveWasteFilter] = useState("all");
   const [sortBy, setSortBy] = useState("quantity");
@@ -181,19 +182,18 @@ export default function BuyerPage() {
     }
 
     if (!currentUser?.uid) {
-      setStatusMessage("Please sign in before locking an offer.");
+      pushToast("Sign in to lock an offer", "error");
       setIsModalOpen(false);
       return;
     }
 
     try {
-      setStatusMessage("");
       await lockListingSelection(cluster.id, chosenListingIds || [], currentUser.uid);
-      setStatusMessage("✓ Demo escrow locked — no real payment processed");
+      pushToast("Escrow locked", "success");
       setIsModalOpen(false);
     } catch (error) {
       console.error(error);
-      setStatusMessage("Escrow could not be locked. Please try again.");
+      pushToast("Lock failed. Please try again.", "error");
       setIsModalOpen(false);
     }
   };
@@ -311,18 +311,13 @@ export default function BuyerPage() {
             onClearSelection={clearSelection}
             onLockEscrow={(cluster, chosenIds) => {
               if (!chosenIds || chosenIds.length === 0) {
-                setStatusMessage(t.chooseFarmer);
+                pushToast("Select at least one farmer", "error");
                 return;
               }
               setIsModalOpen(true);
             }}
           />
 
-          {statusMessage ? (
-            <div className="agri-buyer-status-message">
-              {statusMessage}
-            </div>
-          ) : null}
         </aside>
       </section>
 
