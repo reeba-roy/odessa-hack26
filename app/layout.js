@@ -1,12 +1,17 @@
-import { Inter } from "next/font/google";
+import { DM_Sans, Fraunces } from "next/font/google";
 import Navbar from "@/components/common/Navbar";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { LanguageProvider } from "@/components/common/LanguageContext";
 import { ToastProvider } from "@/components/common/ToastProvider";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
 });
 
@@ -17,7 +22,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${dmSans.variable} ${fraunces.variable} h-full antialiased`}>
       <body className="min-h-full bg-agri-white text-agri-navy">
         <AuthProvider>
           <LanguageProvider>

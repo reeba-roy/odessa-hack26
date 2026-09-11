@@ -197,12 +197,12 @@ export default function ListingForm() {
     <aside className="rounded-3xl border border-slate-200 bg-slate-900 p-5 text-white shadow-sm sm:p-6">
       <div className="mb-5">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">{t.addListing}</p>
-        <h2 className="mt-2 text-2xl font-bold">{t.createNewOffer}</h2>
+        <h2 className="mt-2 text-2xl font-bold" style={{ color: "#31543E" }}>{t.createNewOffer}</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="farmerName" className="mb-1 block text-sm font-medium text-slate-200">
+          <label htmlFor="farmerName" className="mb-1 block text-sm font-medium" style={{ color: "#31543E" }}>
             {t.farmerName}
           </label>
           <input
@@ -216,7 +216,7 @@ export default function ListingForm() {
         </div>
 
         <div>
-          <label htmlFor="wasteCategory" className="mb-1 block text-sm font-medium text-slate-200">
+          <label htmlFor="wasteCategory" className="mb-1 block text-sm font-medium" style={{ color: "#31543E" }}>
             {t.wasteCategory}
           </label>
           <select
@@ -236,7 +236,7 @@ export default function ListingForm() {
 
         {form.wasteCategory === "Other" ? (
           <div>
-            <label htmlFor="customWasteCategory" className="mb-1 block text-sm font-medium text-slate-200">
+            <label htmlFor="customWasteCategory" className="mb-1 block text-sm font-medium" style={{ color: "#31543E" }}>
               {t.customWasteCategory}
             </label>
             <input
@@ -252,7 +252,7 @@ export default function ListingForm() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="quantityTonnes" className="mb-1 block text-sm font-medium text-slate-200">
+            <label htmlFor="quantityTonnes" className="mb-1 block text-sm font-medium" style={{ color: "#31543E" }}>
               {t.quantityTonnes}
             </label>
             <input
@@ -268,7 +268,7 @@ export default function ListingForm() {
           </div>
 
           <div>
-            <label htmlFor="moisturePct" className="mb-1 block text-sm font-medium text-slate-200">
+            <label htmlFor="moisturePct" className="mb-1 block text-sm font-medium" style={{ color: "#31543E" }}>
               {t.moisturePercent}
             </label>
             <input

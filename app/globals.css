@@ -30,7 +30,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-dm-sans);
+  --font-serif: var(--font-fraunces);
   --color-agri-green: var(--agri-green);
   --color-agri-navy: var(--agri-navy);
   --color-agri-white: var(--agri-white);
@@ -48,7 +49,7 @@ body {
     radial-gradient(circle at 32% 76%, rgba(216, 177, 127, 0.12), transparent 30%),
     var(--background);
   color: var(--text);
-  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  font-family: var(--font-dm-sans), Arial, Helvetica, sans-serif;
 }
 
 .toast-stack {
@@ -137,14 +138,16 @@ a {
 }
 
 .agri-brand-title {
+  font-family: var(--font-fraunces);
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.03em;
 }
 
 .agri-brand-subtitle {
+  font-family: var(--font-dm-sans);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -162,8 +165,9 @@ a {
 
 .agri-navbar-link {
   color: var(--muted);
+  font-family: var(--font-dm-sans);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   padding: 10px 16px;
   transition: color 240ms ease, background 240ms ease;
   border-radius: 999px;
@@ -197,6 +201,43 @@ a {
   color: var(--forest);
 }
 
+.agri-login-link,
+.agri-logout-button {
+  font-family: var(--font-dm-sans);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #31543E;
+  color: #FFFFFF !important;
+  border: 1px solid #31543E;
+  line-height: 1;
+  transition: background 220ms ease, color 220ms ease, border 220ms ease, transform 220ms ease;
+}
+
+.agri-login-link:hover,
+.agri-logout-button:hover,
+.agri-login-link:focus,
+.agri-logout-button:focus,
+.agri-login-link:active,
+.agri-logout-button:active,
+.agri-login-link:visited,
+.agri-logout-button:visited {
+  background: #3D654B;
+  color: #FFFFFF !important;
+  border-color: #3D654B;
+}
+
+.agri-login-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agri-logout-button {
+  cursor: pointer;
+}
+
 .agri-node-home {
   min-height: calc(100vh - 90px);
   padding: 44px 20px;
@@ -225,10 +266,11 @@ a {
 
 .agri-kicker,
 .agri-section-label {
+  font-family: var(--font-dm-sans);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   color: var(--sage-dark);
 }
 
@@ -237,29 +279,34 @@ a {
 }
 
 .agri-home-title {
-  margin: 14px 0 6px;
+  margin: 14px 0 8px;
   color: var(--forest);
-  font-size: clamp(54px, 5vw, 78px);
-  line-height: 0.96;
-  letter-spacing: -0.055em;
-  font-weight: 800;
+  font-family: var(--font-fraunces);
+  font-size: clamp(72px, 5.8vw, 96px);
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  font-weight: 600;
   max-width: 620px;
 }
 
 .agri-home-subtitle {
   color: var(--soil);
   margin: 16px 0 0;
-  font-size: clamp(28px, 2vw, 34px);
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-family: var(--font-dm-sans);
+  font-size: clamp(30px, 2vw, 34px);
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: -0.015em;
 }
 
 .agri-home-copy {
   margin: 20px 0 26px;
   max-width: 560px;
   color: var(--muted);
-  font-size: 18px;
-  line-height: 1.7;
+  font-family: var(--font-dm-sans);
+  font-size: clamp(16px, 1.65vw, 20px);
+  line-height: 1.6;
+  font-weight: 400;
 }
 
 .agri-home-cta {
@@ -274,9 +321,11 @@ a {
   min-width: 190px;
   border-radius: 999px;
   padding: 14px 24px;
-  font-weight: 800;
-  font-size: 14px;
+  font-family: var(--font-dm-sans);
+  font-weight: 600;
+  font-size: 15px;
   border: 1px solid transparent;
+  letter-spacing: 0.12em;
   transition: transform 260ms ease, box-shadow 260ms ease, background 260ms ease;
 }
 
@@ -366,14 +415,14 @@ a {
 
 .agri-market-head h1 {
   margin: 12px 0 0;
-  font-size: clamp(44px, 4vw, 56px);
+  font-size: clamp(48px, 4vw, 64px);
   font-weight: 800;
   color: var(--paper);
 }
 
 .agri-market-subhead {
   color: var(--sage-light);
-  font-size: 16px;
+  font-size: clamp(18px, 1.8vw, 20px);
   margin-top: 14px;
 }
 
